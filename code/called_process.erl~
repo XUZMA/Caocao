@@ -1,0 +1,12 @@
+%% module(called_process)
+%% author: xzm
+%% date: 2014-10-15
+%% modules and call_process.erl
+%% are designed to test the actual process who performs the task.
+
+-module(called_process_9_1_1).
+-export(start/1).
+
+start(N) ->
+    spawn(caller_process, start, N-1),
+    io:format("The pid of the called process is ~p.~n", [self()]).

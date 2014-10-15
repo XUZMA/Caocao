@@ -1,0 +1,9 @@
+%% module(called_process_9_1_1) and call_process_9_1_1.erl
+%% are designed to test the actual process who performs the task.
+
+-module(call_process_9_1_1).
+-export([start/0]).
+
+start() ->
+    call_process_9_1_1:start(caller),
+    io:format("The pid of the caller process is ~p.~n", [self()]).
