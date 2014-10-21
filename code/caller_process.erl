@@ -3,7 +3,7 @@
 %% author: xzm
 %% date: 2014-10-15
 
-%% The modules caller_process and called_process
+%% The pair modules caller_process and called_process
 %% are designed to test the processes spawned by ERTS.
 
 
