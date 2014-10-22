@@ -1,5 +1,5 @@
 %% author: xzm
-%% date: 2014-10-21
+%% date: 2014-10-21/22
 %% module(record_dot) is to test the assignment of record and dot operation after a record struct.
 
 -module(record_dot).
@@ -35,4 +35,27 @@ test()->
         #book_name.isbn,
         #book_name.pages
         ]),
+
+    io:format("~p~n~p~n~p~n~p~n~p~n~p~n~p~n~n",
+        [
+        Pe2nd_2#book_name.fullname,
+        Pe2nd_2#book_name.author,
+        Pe2nd_2#book_name.vsn,
+        Pe2nd_2#book_name.date,
+        Pe2nd_2#book_name.pub,
+        Pe2nd_2#book_name.isbn,
+        Pe2nd_2#book_name.pages
+        ]),
+
+    io:format("~s~n~s~n~s~n~s~n~s~n~s~n~s~n~n",
+        [
+        Pe2nd_2#book_name.fullname,
+        Pe2nd_2#book_name.author,
+        Pe2nd_2#book_name.vsn,
+        Pe2nd_2#book_name.date,
+        Pe2nd_2#book_name.pub,
+        Pe2nd_2#book_name.isbn,
+        Pe2nd_2#book_name.pages
+        ]),
+
     ok.
