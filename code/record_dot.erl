@@ -1,7 +1,10 @@
 %% author: xzm
 %% date: 2014-10-21/22
 %% module(record_dot) is to test the assignment of record and dot operation after record.
-%% Notice: the dot operation result after the struct declaration and instantiation different.
+%% Notice:
+%%    The dot operation result after the struct declaration and instantiation different.
+%%    The dot operation result after the struct declaration is the ordinal ineger, beginning at 2;
+%%    while the dot operation result after the struct declaration instantiation return the actual field value.
 
 -module(record_dot).
 -export([test/0]).
