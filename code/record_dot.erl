@@ -7,11 +7,11 @@
 %%    while the dot operation result after the struct declaration instantiation return the actual field value.
 
 -module(record_dot).
--export([test/0]).
+-export([start/0]).
 
 -record(book_name, {fullname,author,vsn,date,pub,isbn,pages}).
 
-test()->
+start()->
     PE2nd_1 = #book_name{
         fullname  = "Progranmming Erlang, Software For a Concurrent World",
         author    = "Joe Armstrong",
