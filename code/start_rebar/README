@@ -1,0 +1,58 @@
+https://github.com/rebar/rebar/wiki/Getting-started
+
+================================================
+Creating our first rebar project
+
+Now we can use rebar's template system to create the skeleton of our application:
+
+$ rebar create-app appid=myapp
+The result of this command would be a single sub-directory src/ which should contain three files:
+
+myapp.app.src - The OTP application specification
+myapp_app.erl - An implementation of the OTP Application behaviour
+myapp_sup.erl - An implementation of the OTP Supervisor behaviour (top level supervisor of the application)
+Building the project
+
+================================================
+Compile the application with:
+
+$ rebar compile
+A new directory ebin/ should now exist and contain the .beam files corresponding to the Erlang source files in the src/ directory. In addition, note the presence of the ebin/myapp.app file. Rebar has dynamically generated a proper OTP application specification using the src/myapp.app.src file as a template by adding information about all compiled Erlang modules of the application into the myapp.app file's modules section.
+
+To cleanup the project after a compilation run simply do:
+$ rebar clean
+
+================================================
+Testing
+
+Rebar provides support for both EUnit and Common Test testing frameworks out of the box. In this example, we'll use EUnit and write a simple unit test for our application.
+
+Add the following code into the src/myapp_app.erl file, right after the -export(...) directive:
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
+
+and add the following block of code at the very end of of the file:
+
+-ifdef(TEST).
+
+simple_test() ->
+    ok = application:start(myapp),
+    ?assertNot(undefined == whereis(myapp_sup)).
+
+-endif.
+By wrapping the test code with that ifdef directive, we can be sure that our test code won't be shipped as a part of the compiled production code in the ebin/ folder.
+
+Let's run the unit test now:
+
+$ rebar compile eunit
+You should see output like this:
+
+==> myapp (compile)
+Compiled src/myapp_app.erl
+==> myapp (eunit)
+Compiled src/myapp_app.erl
+  Test passed
+You may have noticed that Rebar compiled myapp_app.erl file twice. First compilation was done by the handler of the compile command. The second one was done by the handler of the eunit command which compiled all source code with debug information included and put the generated .beam files into a separate directory, .eunit/, in order not to clobber the ebin/ one.
