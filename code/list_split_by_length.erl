@@ -23,7 +23,7 @@
 
 %% ================================================
 %%
-%% functionality: split a list with n element. [1,2,3,4,5] -> [[1,2],[3,4],[5]].
+%% functionality: split a list into a series of sub-lists of n elements except the last one which might  has <=n elements.
 %%
 split_by_length(List, N) ->
     split_by_length__(List, N, {0,[]}, []).
