@@ -165,7 +165,9 @@
 %%    in circle 3, there are 4*4+4 = 4*5 vertexes, the side length is 4+2=6;
 %%    in circle 4, there are 6*4+4 = 4*7 vertexes, the side length is 6+2=8;
 %%    in circle 5, there are 8*4+4 = 4*9 vertexes, the side length is 8+2=10;
-%%    in circle 6, there are 10*4+4 = 4*11 vertexes, the side length is 10+2=12.
+%%    in circle 6, there are 10*4+4 = 4*11 vertexes, the side length is 10+2=12,
+%%    i.e.,
+%%    in circle n, there are  4*(2*n - 1) vertexes, the side length is 2 * n.
 %%
 %%    let
 %%                weight(P) = 1/(4*11*6)    = wt_6, if P is a vertex in circle 6;
@@ -199,7 +201,9 @@
 %%                |
 %%                the 1st diagonal line: diag1
 %%
-%%                                               wt_k  = 1/24  * 1/(2*k - 1),     for k = 1,2,3,4,5,6.
+%%                                               
+%%        wt_k  = 1/24  * 1/(2*k - 1),     for k = 1,2,3,4,5,6.
+%%
 %%        wtd_01 = weight(diag01) = wt_6;
 %%        wtd_02 = weight(diag02) = wtd_01 + wt_6;
 %%        wtd_03 = weight(diag03) = wtd_02 + wt_5;
@@ -212,7 +216,6 @@
 %%        wtd_10 = weight(diag10)  =wtd_09 + wt_2;
 %%        wtd_11 = weight(diag11) = wtd_10 + wt_1;
 %%        wtd_12 = weight(diag12) = wtd_11 + wt_1;
-%%
 %%
 %%        wtt_01 = wtd_01;
 %%        wtt_02 = wtt_01 + wtd_02;
@@ -227,9 +230,62 @@
 %%        wtt_11 = wtt_10 + wtd_11;
 %%        wtt_12 = wtt_11 + wtd_12;
 %%
-%%    gohere.
+%%     by the following function weight_trigonum/0, we have the following weight values, 
+%%        ------------------------
+%%            wt_1 through to wt_6
+%%     wt_1 = 0.0037878787878787876,
+%%     wt_2 = 0.004629629629629629,
+%%     wt_3 = 0.005952380952380952,
+%%     wt_4 = 0.008333333333333333,
+%%     wt_5 = 0.013888888888888888,
+%%     wt_6 = 0.041666666666666664
+%%        ------------------------
+%%            wtt_01 throught to wwt_12
+%%     0.0037878787878787876,
+%%     0.011363636363636362,
+%%     0.023569023569023566,
+%%     0.0404040404040404,
+%%     0.06319143819143819,
+%%     0.09193121693121692,
+%%     0.12900432900432898,
+%%     0.17441077441077438,
+%%     0.23370610870610867,
+%%     0.3068903318903319,
+%%     0.42174122174122175,
+%%     0.5782587782587782
 %%
-%% 11. calculating kronecker_delta(P, attack_field) .
+%%    based on the above calculation, take 0.15 as the threshold value of coefficient between attack_field and neighbor_region(x,y).
+%%    if coefficient < 0.1,  the player can be regarded as out of danger;
+%%    if coefficient > 0.2,  the player can be regarded as in high danger.
+%%    0.1,     0.15,    0.2,     0.3,     0.4,    0.5 can be used as hp(hit point).
+%%
+%% 11. ripple algorithm to calculate.
+%%     (1) calculate the rrcell where the player wander:
+%%                let x = floor(xp/rrcl)*rrcl,     y = floor(yp/rrcw)*rrcw.
+%%        Ripple_1 = {(x+m*rrcl,y+n*rrcw) | m,n = 0, 1};
+%%                      = {(x, y+n*rrcw) | n = 0, 1} + {(x + rrcl, y+n*rrcw) | n = 0, 1};
+%%    (2) Ripple_2
+%%                      = {(x - rrcl, y+n*rrcw) | n = -1, 0, 1, 2} + {(x + 2*rrcl, y+n*rrcw) | n = -1, 0, 1, 2}
+%%                      + {(x + m*rrcl, y - rrcw) | m =  0, 1} + {(x + m*rrcl, y + 2 * rrcw) | m =  0, 1};
+%%    (3) general ripple generation algorithm:
+%%        delete the factors: x, y and rrcl, rrcw,
+%%        left bottom vertex's cooridinates: (0,0), (-1, -1), (-2,-2), (-3,-3), (-4,-4), (-5,-5).
+%%        for n = 1,2,3,4,5,6,
+%%        ripple_n's left bottom corner pointer is at LB_n =  (-n+1, -n+1),
+%%        ripple_n's side length is Side_n = 2*n.
+%%        from the above 2 piece of information, we can get all the vertexes on ripple_n:
+%%        now, we have ripple_n's 4 corners:
+%%                LB_n = (-n+1, -n+1),
+%%                RB_n = ( n+1, -n+1),
+%%                RT_n = ( n+1, n+1),
+%%                LT_n = (-n+1, n+1),
+%%        now, we have the four ripple sides(in counter-clockwise direction):
+%%                SB_n = {LB_n + (x,0)| x = 0, 1, ..., 2n-2},
+%%                SR_n = {RB_n + (0,y)| y = 0, 1, ..., 2n-2},
+%%                ST_n = {RT_n - (x,0)| x = 0, 1, ..., 2n-2},
+%%                ST_n = {LT_n - (0,y)| x = 0, 1, ..., 2n-2}.
+%%
+%% 12. calculating kronecker_delta(P, attack_field) .
 %%     use polar coordinates to represent the topological relation between two positions;
 %%     use polar coordinates to represent a player's aoe.
 %%
@@ -244,87 +300,28 @@
 
 -module(aoe).
 
--export([days_of_month/2, start/0]).
+-export([start/0]).
 
 %% ====================MAIN PART====================
 
+weight_trigonum() ->
+    List_k = lists:seq(6, 1, -1),
+    List_wt = lists:map(fun(X) -> 1/24  * 1/(2*X - 1) end, List_k),
+    List_wt2 = lists:flatmap(fun(X)->[X, X] end, List_wt),
+    {List_wtd,_} = lists:mapfoldl(fun(X, Sum)->{Sum+X, Sum+X} end, 0, List_wt2),
+    {List_wtt,_} = lists:mapfoldl(fun(X, Sum)->{Sum+X, Sum+X} end, 0, List_wtd),
+    io:format("List_k = ~p~n", [List_k]),
+    io:format("List_wt = ~p~n", [List_wt]),
+    io:format("List_wt2 = ~p~n", [List_wt2]),
+    io:format("List_wtd = ~p~n", [List_wtd]),
+    io:format("List_wtt = ~p~n", [List_wtt]),
+    ok.
 
-days_of_month(Year, Month) -> 
-%% ------------------------------------------------
-%% All years divisible by 400 are leap
-%% Years divisible by 100 are not leap (except the 400 rule above)
-%% Years divisible by 4 are leap (except the 100 rule above)
-    Leap =
-        if
-            trunc(Year / 400) * 400 == Year ->
-                leap;
-            trunc(Year / 100) * 100 == Year ->
-                not_leap;
-            trunc(Year / 4) * 4 == Year ->
-                leap;
-            true ->
-                not_leap
-        end,
-%% ------------------------------------------------
-    case Month of
-        sep -> 30;
-        apr -> 30;
-        jun -> 30;
-        nov -> 30;
-        feb when Leap == leap -> 29;
-        feb -> 28;
-        jan -> 31;
-        mar -> 31;
-        may -> 31;
-        jul -> 31;
-        aug -> 31;
-        oct -> 31;
-        dec -> 31
-    end.
 
 %% ====================TEST PART==================
 
-monthStr(Month) ->
-    case Month of
-        jan -> "Jan.";
-        feb -> "Feb.";
-        mar -> "Mar.";
-        apr -> "Apr.";
-        may -> "May.";
-        jun -> "Jun.";
-        jul -> "Jul.";
-        aug -> "Aug.";
-        sep -> "Sep.";
-        oct -> "Oct.";
-        nov -> "Nov.";
-        dec -> "Dec."
-    end.
-
-test_month_print(_,[]) ->
-    ok;
-test_month_print(Year,[MH|MT]) ->
-    io:format("There are ~p days in ~s ~p.\n",[days_of_month(Year, MH), monthStr(MH),Year]),
-    test_month_print(Year,MT).
-%%    If the last statement is written as follows:
-%%        test_month_print(Year,[MT]).
-%%    an exception error will throw:
-%%    ** exception error: no case clause matching [feb,mar,apr,may,jun,jul,aug,sep,
-%%                                                 oct,nov,dec]
-%%    Bear in mind:
-%%        [MH|MT] produce a term MH and a list MT.
-
-test_print([],_) ->
-    ok;
-test_print(_,[]) ->
-    ok;
-test_print([YH|YT],MonthList) ->
-    test_month_print(YH,MonthList),
-    test_print(YT,MonthList).
-
 test() ->
-    MonthList = [jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec],
-    YearList = [2000,2004,2008,2012,2013,2014],
-    test_print(YearList, MonthList),
+    weight_trigonum(),
     ok.
 
 start() ->
