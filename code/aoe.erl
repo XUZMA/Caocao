@@ -1,8 +1,10 @@
 %% author: xzm
-%% date: 2014-11-05
+%% date: 2014-11-05 --- 11-07
 
 
 %% ------------------------------------------------************************************************------------------------------------------------
+
+%% algorithmic cue:
 
 %% in game terminology, 
 %% aoe is the  abbreviation of "area of effect",
@@ -11,7 +13,6 @@
 %% generally speaking, aoi is a special case of collision detection in computational graphics.
 %% this module gives one algotihm to determine aoe and aoi.
 
-%% algorithmic cue:
 %%
 %% 1. treat the display screen as an infinite Cartesian plane.
 %%     (1) the display screen is a 2d infinite plane, denoted as plane_2d;
@@ -288,14 +289,55 @@
 %% 12. calculating kronecker_delta(P, attack_field) .
 %%     use polar coordinates to represent the topological relation between two positions;
 %%     use polar coordinates to represent a player's aoe.
+%%     (1)  the 2d-plane is partitioned into cells whose sizes are (cl, cw);
+%%     (2)  the assassin stands at A=(xa, ya); the player stands at P=(xp, yp);
+%%     (3) the assassin's striking range is a sector, SA=(xa, ya, ra, alpha, beta), where (xa,ya) is the center, ra is the radius ra,  and (alpha, beta) is the radian;
+%%     (4) P is striked by A sharply, iff the vector AP=(xp-xa, yp-ya) fall in the sector (0,0, ra, alpha, beta), i.e.,
+%%                modulus(AP) <=ra, alpha<=aa(AP)<=beta. aa, abbreviated for amplitude angle.
+%%     (5) the hit efficiency point HEP imposed to P by A is defined as follows:
+%%                let MAX be the maximum possible point;
+%%                if P is striked by A sharply, HEP = MAX;
+%%                else if SA intersects with any border segemtn of Ripple_1, HEP = MAX -1;
+%%                else if SA intersects with any border segemtn of Ripple_2, HEP = MAX -2;
+%%                ... ...
+%%                else if SA intersects with any border segemtn of Ripple_k, HEP = MAX -k, k=1,2,..., MAX.
 %%
+%% 13. rectangle rect=(x1,x2,y1,y2) whose borders are surrounded by the horizontal lines x=x1,x=x2, and vertical lines y=y1, y=y2, assume x1<x2, y1<y2.
+%%        the sector sect=(0,0,apha,beta,ra) 
+%%        the four corner points of  retangle(x1,x2,y1,y2): LB = (x1,y1), LT=(x1,y2), RB=(x2,y1),RT=(x2,y2).
+%%        the (modulus, aa) pairs of the above four corner points with reference to original point(0,0): 
+%%                ma = {(MLB,ALB), (MLT,ALT), (MRB,ARB), (MRT,ART)}.
+%%        since both rect and  sect are convex, rect intersects with sect, iff,
+%%                        there is a corn(modulus, aa) in ma such that corn is a point in sect, i.e.,
+%%                        modulus <= ra and alpha <= aa <= beta.
 %%
+%%14. method to determin whether alpha <= aa <= beta holds.
+%%      point P(xp,yp).
+%%      if the positive x-axis is not in sect, assume 0 <= alpha < beta <2*pi(    ---- METHOD1),
+%%                 else -pi <= alpha < beta < pi(    ---- METHOD2).
+%%      the difference between METHOD1 and METHOD2:
+%%                METHOD1 allows for aa > pi;
+%%                METHOD2 allows for aa < 0.
 %%
+%%      when 0 <= aa < pi, i.e., in the case of Quadrant I, II(except the negative x-axis):
+%%      there is no difference for METHOD1 and METHOD2, 
+%%                        when P is in Quadrant I, aa = arctan(yp/xp),
+%%                        when P is in Quadrant II, aa = arctan(yp/xp) + pi;
+%%      for point(xp,yp) in Quadrant III, 
+%%                        for METHOD1, aa = arctan(yp/xp) + pi;
+%%                        for METHOD2, aa = arctan(yp/xp) - pi;
+%%      for point(xp,yp) in Quadrant IV, 
+%%                        for METHOD1, aa = arctan(yp/xp) + 2*pi;
+%%                        for METHOD2, aa = arctan(yp/xp) - pi;
+%%
+%%      in distributed computing, 
+%%          the assasin give [method_kind, angle_starting, angle_ending], method_kind = method1 if positive x-axis is in the sector, else method2.
+%%          the player calculate aa by its quadrant(according the signs of xp, yp), arctan, and method_kind.
 %% ------------------------------------------------************************************************------------------------------------------------
 
 %% erlang implementation:
 %% 1. use modules(wx,...) to display the effect.
-
+%% 15. erlang module(wx).
 %% ------------------------------------------------************************************************------------------------------------------------
 
 -module(aoe).
