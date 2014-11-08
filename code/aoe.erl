@@ -1,5 +1,5 @@
 %% author: xzm
-%% date: 2014-11-05 --- 11-07
+%% date: 2014-11-05/06/07/08
 
 
 %% ------------------------------------------------************************************************------------------------------------------------
@@ -307,9 +307,26 @@
 %%        the four corner points of  retangle(x1,x2,y1,y2): LB = (x1,y1), LT=(x1,y2), RB=(x2,y1),RT=(x2,y2).
 %%        the (modulus, aa) pairs of the above four corner points with reference to original point(0,0): 
 %%                ma = {(MLB,ALB), (MLT,ALT), (MRB,ARB), (MRT,ART)}.
-%%        since both rect and  sect are convex, rect intersects with sect, iff,
-%%                        there is a corn(modulus, aa) in ma such that corn is a point in sect, i.e.,
+%%                --------------------------------
+%%        rect intersects with sect, iff,
+%%                        there are the following 2 cases:
+%%                        (1) any of 4 corner point(LB, LT, RB, RT)  is in sect;
+%%                        (2) if none of 4 corner point(LB, LT, RB, RT)  is in sect, then any of the  4 perpendicular or vertical points (X1(x1,0), X2(x2,0),Y1(0,y1),Y2(0,y2)) is in sect.
+%%       for any of the above 8 points P, reprent its postion with polar coordiates (modulus, aa). P is in sect, iff
 %%                        modulus <= ra and alpha <= aa <= beta.
+%%                --------------------------------
+%%        proof:
+%%        (1) denote orignal point O(0,0), if circle cir=(O,r) intersects with straight line x=x1 at points: P1(x1,y1_), P2(x1,y2_),
+%%            then trigon O_P1_P2 is isosceles, and the two intersections are symmetric with referrence to X-axis;
+%%            then the center of P1_P2, i.e. (x1,0) is in the circle.
+%%        (2) based on the discussion of (1), 
+%%            if sect intersects with the segment L between LB and LT, 
+%%                without loss of generality, we can assume y1 < y2, there are the following 3 cases:
+%%                i. 0<y1<y2. in this case, (x1,y1) is in sect;
+%%                ii. y1<0<y2. in this case, (x1,0) is in sect;
+%%                iii. y1<y2<0. in this case, (x1,y2) is in sect.
+%%            similar conclusions hold for segment R between RB and RT, segment B between LB and RB, segment between LT and RT.
+%%        (3) if sect intersect with rect, then sect interact with any one of L, R, B, or T. Q.E.D.
 %%
 %%14. method to determin whether alpha <= aa <= beta holds.
 %%      point P(xp,yp).
