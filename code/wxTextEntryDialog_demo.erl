@@ -11,8 +11,8 @@
 -include("/usr/local/lib/erlang/lib/wx-1.3.1/include/wx.hrl").
 
 usernameDialog() ->
-    Prompt = "please entry your username!",
-    CaptionInfo = "login chat system",
+    Prompt = "please entry your account name:",
+    CaptionInfo = "login system",
 
     wx:new(),
     Dialog = wxTextEntryDialog:new(wx:null(),Prompt,[{caption,CaptionInfo}]),
