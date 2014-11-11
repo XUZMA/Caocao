@@ -8,12 +8,12 @@
 
 %%    ================================================
 
-%%-include_lib(“wx/include/wx.hrl”).
+%% in Eshell, run code:lib_dir(wx) to get wx lib dir: "/usr/local/lib/erlang/lib/wx-1.3.1"
 -include("/usr/local/lib/erlang/lib/wx-1.3.1/include/wx.hrl").
 
 passwordDialog() ->
-    Prompt = "please enter your password of current account:",
-    CaptionInfo = "login system",
+    Prompt = "please enter the password for current account:",
+    CaptionInfo = "login system...",
 
     wx:new(),
     Dialog = wxPasswordEntryDialog:new(wx:null(),Prompt,[{caption,CaptionInfo}]),
