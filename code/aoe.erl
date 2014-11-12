@@ -1,5 +1,5 @@
 %% author: xzm
-%% date: 2014-11-05/06/07/08
+%% date: 2014-11-05/06/07/08/12
 
 
 %% ------------------------------------------------************************************************------------------------------------------------
@@ -363,24 +363,117 @@
 
 %% ====================MAIN PART====================
 
-weight_trigonum() ->
-    List_k = lists:seq(6, 1, -1),
-    List_wt = lists:map(fun(X) -> 1/24  * 1/(2*X - 1) end, List_k),
-    List_wt2 = lists:flatmap(fun(X)->[X, X] end, List_wt),
-    {List_wtd,_} = lists:mapfoldl(fun(X, Sum)->{Sum+X, Sum+X} end, 0, List_wt2),
-    {List_wtt,_} = lists:mapfoldl(fun(X, Sum)->{Sum+X, Sum+X} end, 0, List_wtd),
-    io:format("List_k = ~p~n", [List_k]),
-    io:format("List_wt = ~p~n", [List_wt]),
-    io:format("List_wt2 = ~p~n", [List_wt2]),
-    io:format("List_wtd = ~p~n", [List_wtd]),
-    io:format("List_wtt = ~p~n", [List_wtt]),
-    ok.
+%% weight_trigonum() ->
+%%     List_k = lists:seq(6, 1, -1),
+%%     List_wt = lists:map(fun(X) -> 1/24  * 1/(2*X - 1) end, List_k),
+%%     List_wt2 = lists:flatmap(fun(X)->[X, X] end, List_wt),
+%%     {List_wtd,_} = lists:mapfoldl(fun(X, Sum)->{Sum+X, Sum+X} end, 0, List_wt2),
+%%     {List_wtt,_} = lists:mapfoldl(fun(X, Sum)->{Sum+X, Sum+X} end, 0, List_wtd),
+%%     io:format("List_k = ~p~n", [List_k]),
+%%     io:format("List_wt = ~p~n", [List_wt]),
+%%     io:format("List_wt2 = ~p~n", [List_wt2]),
+%%     io:format("List_wtd = ~p~n", [List_wtd]),
+%%     io:format("List_wtt = ~p~n", [List_wtt]),
+%%     ok.
 
+%% ===================API Exports ======================
+%% determine whether player is within the attack sphere.
+
+%% 
+%% the length and width of a cell.
+%% modify these 2 macros according to the actual size.
+-define(cell_length, 40).
+-define(cell_width, 40).
+
+%% Prerequisite: X, Y can't be 0 simultaneously.
+%% NOTICE the definition of function radian/2. It's very strange. Any modification may leads to compiling error.
+radian(X,Y) ->
+    Ret =
+    if
+        X ==0 ->
+            if
+                %% Y == 0 ->
+                %%     badargs;
+		Y > 0 ->
+		    math:pi()/2;
+		 Y < 0 ->
+                    3*math:pi()/2
+            end;
+        X > 0 ->
+            if
+		Y == 0 ->
+                    0;
+		Y > 0 ->
+                    math:atan2(Y, X);
+		Y < 0 ->
+                    2*math:pi() - math:atan2(-Y, X)
+            end;
+	X < 0 ->
+            if
+                Y == 0 ->
+                    math:pi();
+                Y > 0 ->
+                    math:pi() - math:atan2(Y,-X);
+		Y < 0 ->
+                    math:pi() + math:atan2(-Y,-X)
+            end
+    end,
+    Ret.
+
+%% radian_test() ->
+%%     List_pt = [{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}],
+%%     List_pt = [{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}],
+%%     lists:map(fun({X,Y}) -> io:format("~p~n",[radian(X,Y)]) end,List_pt).
+
+%% Prerequisite: {X1,Y1} /= {X2,Y2}.
+point_in_sector(X1,Y1,X2,Y2,Radius,Angle_s,Angle_amplitude) ->
+    X = X2 - X1,
+    Y = Y2 - Y1,
+    Dist = math:sqrt(X*X+Y*Y),
+    Rad = radian(X,Y),
+
+    Angle_e = Angle_s + Angle_amplitude,
+    Two_pi = 2 * math:pi(),
+
+    Ret = 
+        case Dist > Radius of
+            true -> false;
+	    _      ->
+                case Angle_e =< Two_pi of
+                    true ->
+                        if
+                            Rad < Angle_s -> false;
+                            Rad > Angle_e -> false;
+                            true                -> ture
+                        end;
+                    false       ->
+                        if
+                            Angle_s =< Rad                   -> true;
+			    Rad+Two_pi =< Angle_e     -> true;
+			    true                                   -> false
+                        end
+                end
+        end,
+    Ret.
+
+point_in_sector_test() ->
+    io:format("~p~n",[point_in_sector(1,1,0,0,2,0,math:pi())]).
+
+
+%%
+%% rect_in_sector()
+%%
+%% parameters:
+%%
+%% in_attack_sector(Pos_antagonist, Pos_attacker, Radius,Direction, Radian_s,Radian_e)  ->
+%%     todo.
 
 %% ====================TEST PART==================
 
 test() ->
-    weight_trigonum(),
+%%    weight_trigonum(),
+%%    radian_test(),
+    point_in_sector_test(),
     ok.
 
 start() ->
