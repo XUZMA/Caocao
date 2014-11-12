@@ -425,10 +425,13 @@ radian(X,Y) ->
 %%     List_pt = [{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}],
 %%     lists:map(fun({X,Y}) -> io:format("~p~n",[radian(X,Y)]) end,List_pt).
 
-%% Prerequisite: {X1,Y1} /= {X2,Y2}.
-point_in_sector(X1,Y1,X2,Y2,Radius,Angle_s,Angle_amplitude) ->
-    X = X2 - X1,
-    Y = Y2 - Y1,
+%% Prerequisite:
+%%    1.  {X1,Y1} /= {X0,Y0}. {X0,Y0} is the coordinates of the attacker.
+%%    2. Angle_amplitude =< 2*math:pi().
+point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
+    X = X1 - X0,
+    Y = Y1 - Y0,
+
     Dist = math:sqrt(X*X+Y*Y),
     Rad = radian(X,Y),
 
@@ -436,24 +439,23 @@ point_in_sector(X1,Y1,X2,Y2,Radius,Angle_s,Angle_amplitude) ->
     Two_pi = 2 * math:pi(),
 
     Ret = 
-        case Dist > Radius of
-            true -> false;
-	    _      ->
-                case Angle_e =< Two_pi of
+        if
+            Dist > Radius -> false;
+	    true      ->
+                if
+                    Angle_e =< Two_pi  ->
+                        if
+                            (Rad < Angle_s) or (Rad > Angle_e) -> false;
+                            true -> ture
+                        end;
                     true ->
                         if
-                            Rad < Angle_s -> false;
-                            Rad > Angle_e -> false;
-                            true                -> ture
-                        end;
-                    false       ->
-                        if
-                            Angle_s =< Rad                   -> true;
-			    Rad+Two_pi =< Angle_e     -> true;
-			    true                                   -> false
+                            (Angle_s =< Rad) or (Rad+Two_pi =< Angle_e)  -> true;
+			    true -> false
                         end
                 end
         end,
+
     Ret.
 
 point_in_sector_test() ->
