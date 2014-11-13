@@ -311,9 +311,12 @@
 %%        rect intersects with sect, iff,
 %%                        there are the following 2 cases:
 %%                        (1) any of 4 corner point(LB, LT, RB, RT)  is in sect;
-%%                        (2) if none of 4 corner point(LB, LT, RB, RT)  is in sect, then any of the  4 perpendicular or vertical points (X1(x1,0), X2(x2,0),Y1(0,y1),Y2(0,y2)) is in sect.
-%%       for any of the above 8 points P, reprent its postion with polar coordiates (modulus, aa). P is in sect, iff
-%%                        modulus <= ra and alpha <= aa <= beta.
+%%                        (2) if none of 4 corner point(LB, LT, RB, RT)  is in sect, then any of the  following conditions holds:
+%%                            i.   the vertical point X1(x1,0) is in sect, and X(x1,0) is in rect, i.e., y1 < 0 <y2;
+%%                            ii.  the vertical point X2(x2,0) is in sect, and X(x2,0) is in rect, i.e., y1 < 0 <y2;
+%%                            iii. the vertical point Y1(0,y1) is in sect, and X(0,y1) is in rect, i.e., x1 < 0 <x2;
+%%                            iv. the vertical point Y2(0,y2) is in sect, and X(0,y2) is in rect, i.e., x1 < 0 <x2;
+%%
 %%                --------------------------------
 %%        proof:
 %%        (1) denote orignal point O(0,0), if circle cir=(O,r) intersects with straight line x=x1 at points: P1(x1,y1_), P2(x1,y2_),
@@ -328,7 +331,13 @@
 %%            similar conclusions hold for segment R between RB and RT, segment B between LB and RB, segment between LT and RT.
 %%        (3) if sect intersect with rect, then sect interact with any one of L, R, B, or T. Q.E.D.
 %%
-%%14. method to determin whether alpha <= aa <= beta holds.
+%%14. 
+%%       for any point P, reprent its postion with polar coordiates (modulus, aa). P is in sect, iff
+%%                        modulus <= ra and alpha <= aa <= beta.
+%%
+%%    the following discussion is my former thinking, the reader can skip this part, and study the program below: point_in_sector/7.
+%%
+%%    method to determin whether alpha <= aa <= beta holds.
 %%      point P(xp,yp).
 %%      if the positive x-axis is not in sect, assume 0 <= alpha < beta <2*pi(    ---- METHOD1),
 %%                 else -pi <= alpha < beta < pi(    ---- METHOD2).
@@ -380,10 +389,10 @@
 %% determine whether player is within the attack sphere.
 
 %% 
-%% the length and width of a cell.
-%% modify these 2 macros according to the actual size.
--define(cell_length, 40).
--define(cell_width, 40).
+%% pre-assumption: cell is a square.
+%% ?cell_side is the length of cell side, in pixel.
+%% the user should modify the macro according to the actual situation.
+-define(cell_size, 40).
 
 %% Pre-assumption: if X, Y are 0 simultaneously, let radian(0,0) = 0.
 %% NOTICE the definition of function radian/2. It's very strange. Any modification may leads to compiling error.
@@ -470,6 +479,7 @@ point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
 %%    1.  {X0,Y0} is the coordinates of the attacker.
 %%    2. Angle_amplitude =< 2*math:pi().
 %%    3. rect is represented by (X1,Y1,L_r,W_r), where (X1,Y1) is the left bottom corner with horizontal length L_r and vertical width W_r.
+%%    4. L_r, and W_r must be non-negative.
 rect_sector_intersect(X1,Y1,L_r,W_r,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
     X2 = X1+L_r,
     Y2 = Y1+W_r,
@@ -485,36 +495,35 @@ rect_sector_intersect(X1,Y1,L_r,W_r,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
     point_in_sector(X2,Y2,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
 
     %% ---- vertical points
-    %% L - {X1,Y0}
-    point_in_sector(X1,Y0,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
-    %% R - {X2,Y0}
-    point_in_sector(X2,Y0,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
-    %% B - {X0,Y1}
-    point_in_sector(X0,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
-    %% T - {X0,Y2}
-    point_in_sector(X0,Y2,X0,Y0,Radius,Angle_s,Angle_amplitude) .
+    %% L - {X1,Y0} and  R - {X2,Y0}
+    (
+        (Y1 < Y0 andalso Y0 < Y2)  andalso
+        (point_in_sector(X1,Y0,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse point_in_sector(X2,Y0,X0,Y0,Radius,Angle_s,Angle_amplitude) )
+    ) orelse
+    %% B - {X0,Y1} and T - {X0,Y2}
+    (
+        (X1 < X0 andalso X0 < X2)  andalso
+        (point_in_sector(X0,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse point_in_sector(X0,Y2,X0,Y0,Radius,Angle_s,Angle_amplitude) )
+    ).
 
 %% rect_sector_intersect_test() ->
-%%     List_pt = [{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{2,0},{2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2}],
-%%     L_r = math:sqrt(2),
-%%     W_r = L_r,
-%%     List_true = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == true end,List_pt),
-%%     List_false = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == false end,List_pt),
+%%     List_pt = [{-6,-6},{-5,-5},{-4,-4},{-3,-3},{-2,-2},{-1,-1},{0,0},{1,1},{2,2},{3,3},{4,4},{5,5},{6,6}],
+%%     L_r = 1,
+%%     W_r = 1,
+%%     List_true = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,4,0,2*math:pi()) == true end,List_pt),
+%%     List_false = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,4,0,2*math:pi()) == false end,List_pt),
 %%     io:format("the left bottom corner points of the rectangles that intersect with the upper half disk:~n~p~n",[List_true]),
 %%     io:format("the left bottom corner points of the rectangles which don't intersect with the upper half disk:~n~p~n",[List_false]).
 
-rect_sector_intersect_test2() ->
-    List_pt = [{-6,-6},{-5,-5},{-4,-4},{-3,-3},{-2,-2},{-1,-1},{0,0},{1,1},{2,2},{3,3},{4,4},{5,5},{6,6}],
-    L_r = math:sqrt(2),
-    W_r = L_r,
-    List_true = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == true end,List_pt),
-    List_false = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == false end,List_pt),
-    io:format("the left bottom corner points of the rectangles that intersect with the upper half disk:~n~p~n",[List_true]),
-    io:format("the left bottom corner points of the rectangles which don't intersect with the upper half disk:~n~p~n",[List_false]).
-
-%%
-%% in_attack_sector(Pos_antagonist, Pos_attacker, Radius,Direction, Radian_s,Radian_e)  ->
-%%     todo.
+%% 
+%% Prerequisite:
+%%    1.  {X0,Y0} is the coordinates of the attacker.
+%%    2. Angle_amplitude =< 2*math:pi().
+%% Return Value:
+%%    {true,0} if point {X1,Y1} is in the sector(X0,Y0,Radius,Angle_s,Angle_amplitude) , else
+%%    {true,k}, 1 =< k =< 6,  if intimately attaching cell whose side is k*?cell_side long, else
+%%    {false}.
+in_range(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
 
 %% ====================TEST PART==================
 
@@ -523,7 +532,6 @@ test() ->
 %%    radian_test(),
 %%    point_in_sector_test(),
 %%    rect_sector_intersect_test(),
-    rect_sector_intersect_test2(),
 
     ok.
 
