@@ -523,7 +523,31 @@ rect_sector_intersect(X1,Y1,L_r,W_r,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
 %%    {true,0} if point {X1,Y1} is in the sector(X0,Y0,Radius,Angle_s,Angle_amplitude) , else
 %%    {true,k}, 1 =< k =< 6,  if intimately attaching cell whose side is k*?cell_side long, else
 %%    {false}.
-in_range(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
+hit_intensity(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
+    if
+    point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) =:= true -> 0;
+    true ->
+        Stepsize = ?cell_size/4,
+        [X_LB, Y_LB] =lists:map
+            (fun(Z) -> 
+                T = Z/Stepsize,
+                S = erlang:trunc(T),
+                if
+                    S < T -> S - 1;
+                    true -> S
+                end
+            end,
+            [X1, Y1]),
+        List_LB = lists:map(
+            fun({X}) ->
+                {X_LB-Stepsize*X,Y_LB-Stepsize*X,(2*X+1)*Stepsize}
+            end,
+            lists:seq(0,6,1)),
+        erlang:length(lists:takewhile(
+            fun({X,Y,Side}) ->
+                rect_sector_intersect(X,Y,Side,Side,X0,Y0,Radius,Angle_s,Angle_amplitude)  =:= false
+            end,
+            List_LB)).
 
 %% ====================TEST PART==================
 
