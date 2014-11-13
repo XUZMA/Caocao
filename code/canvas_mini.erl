@@ -1,5 +1,5 @@
 %% author: xzm
-%% date: 2014-11-11/11-12
+%% date: 2014-11-11/11-12/11-13
 
 %% the module demonstrates the usage of  wxDC through  a serires of canvas drawing operations.
 
@@ -43,29 +43,34 @@ canvas_mini() ->
     Dc = wxClientDC:new(Frm),
     Pen = wxPen:new(),
 
-
-%%    ---- draw background grid ----
+%%    ---- draw foreground arc ----
 
     wxPen:setColour(Pen, 255,0,0),
     wxDC:setPen(Dc, Pen),
-    draw_grid(Dc,0,0,1600,800,400,400) ,
+    wxDC:drawArc(Dc,{1000,200},{1000,600},{800,400}),
+    wxDC:drawArc(Dc,{1150,450},{1150,350},{800,400}),
 
-    wxPen:setColour(Pen, 0,255,0),
-    wxDC:setPen(Dc, Pen),
-    draw_grid(Dc,1000,200,400,400,200,200) ,
-
-    wxPen:setColour(Pen, 0,0,255),
-    wxDC:setPen(Dc, Pen),
-    draw_grid(Dc,1100,300,200,200,100,100) ,
+%%    ---- draw background grid ----
 
     wxPen:setColour(Pen, 255,255,0),
     wxDC:setPen(Dc, Pen),
     draw_grid(Dc,1150,350,100,100,50,50) ,
 
-%%    ---- draw foreground arc ----
+    wxPen:setColour(Pen, 255,255,0),
+    wxDC:setPen(Dc, Pen),
+    draw_grid(Dc,1150,350,100,100,50,50) ,
 
-    wxDC:drawArc(Dc,{1000,200},{1000,600},{800,400}),
-    wxDC:drawArc(Dc,{1150,450},{1150,350},{800,400}),
+    wxPen:setColour(Pen, 0,0,255),
+    wxDC:setPen(Dc, Pen),
+    draw_grid(Dc,1100,300,200,200,100,100) ,
+
+    wxPen:setColour(Pen, 0,255,0),
+    wxDC:setPen(Dc, Pen),
+    draw_grid(Dc,1000,200,400,400,200,200) ,
+
+    wxPen:setColour(Pen, 255,0,0),
+    wxDC:setPen(Dc, Pen),
+    draw_grid(Dc,0,0,1600,800,400,400) ,
 
 %%    wxFrame:destroy(Frm).
 
