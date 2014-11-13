@@ -385,20 +385,12 @@
 -define(cell_length, 40).
 -define(cell_width, 40).
 
-%% Prerequisite: X, Y can't be 0 simultaneously.
+%% Pre-assumption: if X, Y are 0 simultaneously, let radian(0,0) = 0.
 %% NOTICE the definition of function radian/2. It's very strange. Any modification may leads to compiling error.
+%% Optimization skill: arrange the branches according to the actual probabilities.
 radian(X,Y) ->
-    Ret =
+    RetVal =
     if
-        X ==0 ->
-            if
-                %% Y == 0 ->
-                %%     badargs;
-		Y > 0 ->
-		    math:pi()/2;
-		 Y < 0 ->
-                    3*math:pi()/2
-            end;
         X > 0 ->
             if
 		Y == 0 ->
@@ -416,37 +408,46 @@ radian(X,Y) ->
                     math:pi() - math:atan2(Y,-X);
 		Y < 0 ->
                     math:pi() + math:atan2(-Y,-X)
+            end;
+        X ==0 ->
+            if
+		Y > 0 ->
+		    math:pi()/2;
+		 Y < 0 ->
+                    3*math:pi()/2;
+                Y == 0 ->
+                    0
             end
     end,
-    Ret.
+    RetVal.
 
 %% radian_test() ->
-%%     List_pt = [{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}],
-%%     List_pt = [{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}],
-%%     lists:map(fun({X,Y}) -> io:format("~p~n",[radian(X,Y)]) end,List_pt).
+%%      List_pt = [{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}],
+%%      lists:map(fun({X,Y}) -> io:format("~p~n",[radian(X,Y)]) end,List_pt).
 
+%% Pre-assumption: if {X1,Y1} =:= {X0,Y0}, let RetVal = true.
 %% Prerequisite:
-%%    1.  {X1,Y1} /= {X0,Y0}. {X0,Y0} is the coordinates of the attacker.
+%%    1.  {X0,Y0} is the coordinates of the attacker.
 %%    2. Angle_amplitude =< 2*math:pi().
 point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
     X = X1 - X0,
     Y = Y1 - Y0,
-
     Dist = math:sqrt(X*X+Y*Y),
     Rad = radian(X,Y),
 
     Angle_e = Angle_s + Angle_amplitude,
     Two_pi = 2 * math:pi(),
 
-    Ret = 
+    RetVal = 
         if
             Dist > Radius -> false;
+            Dist == 0 -> true; %% i.e., {X1,Y1} =:= {X0,Y0} -> true;
 	    true      ->
                 if
                     Angle_e =< Two_pi  ->
                         if
                             (Rad < Angle_s) or (Rad > Angle_e) -> false;
-                            true -> ture
+                            true -> true
                         end;
                     true ->
                         if
@@ -456,16 +457,61 @@ point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
                 end
         end,
 
-    Ret.
+    RetVal.
 
-point_in_sector_test() ->
-    io:format("~p~n",[point_in_sector(1,1,0,0,2,0,math:pi())]).
+%% point_in_sector_test() ->
+%%     List_pt = [{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{2,0},{2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2}],
+%%     List_inner = lists:filter(fun({X,Y}) ->point_in_sector(X,Y,0,0,2,0,math:pi()) == true end,List_pt),
+%%     List_exterior = lists:filter(fun({X,Y}) ->point_in_sector(X,Y,0,0,2,0,math:pi()) == false end,List_pt),
+%%     io:format("the points in the upper half disk:~n~p~n",[List_inner]),
+%%     io:format("the points out of the upper half disk:~n~p~n",[List_exterior]).
 
+%% Parameters:
+%%    1.  {X0,Y0} is the coordinates of the attacker.
+%%    2. Angle_amplitude =< 2*math:pi().
+%%    3. rect is represented by (X1,Y1,L_r,W_r), where (X1,Y1) is the left bottom corner with horizontal length L_r and vertical width W_r.
+rect_sector_intersect(X1,Y1,L_r,W_r,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
+    X2 = X1+L_r,
+    Y2 = Y1+W_r,
 
-%%
-%% rect_in_sector()
-%%
-%% parameters:
+    %% ---- corner points
+    %% LB - {X1,Y1}
+    point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
+    %% LT - {X1,Y2}
+    point_in_sector(X1,Y2,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
+    %% RB - {X2,Y1}
+    point_in_sector(X2,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
+    %% RT - {X2,Y2}
+    point_in_sector(X2,Y2,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
+
+    %% ---- vertical points
+    %% L - {X1,Y0}
+    point_in_sector(X1,Y0,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
+    %% R - {X2,Y0}
+    point_in_sector(X2,Y0,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
+    %% B - {X0,Y1}
+    point_in_sector(X0,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) orelse
+    %% T - {X0,Y2}
+    point_in_sector(X0,Y2,X0,Y0,Radius,Angle_s,Angle_amplitude) .
+
+%% rect_sector_intersect_test() ->
+%%     List_pt = [{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{2,0},{2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2}],
+%%     L_r = math:sqrt(2),
+%%     W_r = L_r,
+%%     List_true = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == true end,List_pt),
+%%     List_false = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == false end,List_pt),
+%%     io:format("the left bottom corner points of the rectangles that intersect with the upper half disk:~n~p~n",[List_true]),
+%%     io:format("the left bottom corner points of the rectangles which don't intersect with the upper half disk:~n~p~n",[List_false]).
+
+rect_sector_intersect_test2() ->
+    List_pt = [{-6,-6},{-5,-5},{-4,-4},{-3,-3},{-2,-2},{-1,-1},{0,0},{1,1},{2,2},{3,3},{4,4},{5,5},{6,6}],
+    L_r = math:sqrt(2),
+    W_r = L_r,
+    List_true = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == true end,List_pt),
+    List_false = lists:filter(fun({X,Y}) ->rect_sector_intersect(X,Y,L_r,W_r,0,0,2,0,math:pi()) == false end,List_pt),
+    io:format("the left bottom corner points of the rectangles that intersect with the upper half disk:~n~p~n",[List_true]),
+    io:format("the left bottom corner points of the rectangles which don't intersect with the upper half disk:~n~p~n",[List_false]).
+
 %%
 %% in_attack_sector(Pos_antagonist, Pos_attacker, Radius,Direction, Radian_s,Radian_e)  ->
 %%     todo.
@@ -475,7 +521,10 @@ point_in_sector_test() ->
 test() ->
 %%    weight_trigonum(),
 %%    radian_test(),
-    point_in_sector_test(),
+%%    point_in_sector_test(),
+%%    rect_sector_intersect_test(),
+    rect_sector_intersect_test2(),
+
     ok.
 
 start() ->
