@@ -1,9 +1,9 @@
 %% author: xzm
 %% date: 2014-11-13
 
-%% the module draw test figures for aoe.erl
+%% the module draw test figures for rect_sector_intersect_test/0 in aoe.erl.
 
--module( aoe_pic).
+-module( aoe_rect_sector_intersect_test-pic).
 
 %% -compile(export_all).
 -export([start/0]).
