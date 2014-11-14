@@ -524,30 +524,50 @@ rect_sector_intersect(X1,Y1,L_r,W_r,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
 %%    {true,k}, 1 =< k =< 6,  if intimately attaching cell whose side is k*?cell_side long, else
 %%    {false}.
 hit_intensity(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) ->
-    if
-    point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) =:= true -> 0;
-    true ->
-        Stepsize = ?cell_size/4,
-        [X_LB, Y_LB] =lists:map
-            (fun(Z) -> 
-                T = Z/Stepsize,
-                S = erlang:trunc(T),
-                if
-                    S < T -> S - 1;
-                    true -> S
-                end
-            end,
-            [X1, Y1]),
-        List_LB = lists:map(
-            fun({X}) ->
-                {X_LB-Stepsize*X,Y_LB-Stepsize*X,(2*X+1)*Stepsize}
-            end,
-            lists:seq(0,6,1)),
-        erlang:length(lists:takewhile(
-            fun({X,Y,Side}) ->
-                rect_sector_intersect(X,Y,Side,Side,X0,Y0,Radius,Angle_s,Angle_amplitude)  =:= false
-            end,
-            List_LB)).
+    %% if
+    %% point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) =:= true -> 0;
+    %% true ->
+    %%
+    %% the above if-statement cause the following compiling error:
+    %% call to local/imported function point_in_sector/7 is illegal in guard
+    %% hence, change the if-statement to the following case-statement:
+    %%
+    case point_in_sector(X1,Y1,X0,Y0,Radius,Angle_s,Angle_amplitude) of
+        true -> 0;
+        _ ->
+            Stepsize = ?cell_size/4,
+            [X_LB, Y_LB] =lists:map
+                (fun(Z) -> 
+                    T = Z/Stepsize,
+                    S = erlang:trunc(T),
+                    R = if
+                            S < T -> S - 1;
+                            true -> S
+                        end,
+                    R * Stepsize
+                end,
+                [X1, Y1]),
+            List_LB = lists:map(
+                fun(X) ->
+                    {X_LB-Stepsize*X,Y_LB-Stepsize*X,(2*X+1)*Stepsize}
+                end,
+                lists:seq(0,6,1)),
+
+            erlang:length(lists:takewhile(
+                fun({X,Y,Side}) ->
+                    rect_sector_intersect(X,Y,Side,Side,X0,Y0,Radius,Angle_s,Angle_amplitude)  =:= false
+                end,
+                List_LB))
+    end.
+
+%% hit_intensity_point_test()->
+%%     io:format("~p~n",[hit_intensity(800,800,0,0,200,0,math:pi()/2)]).
+
+hit_intensity_test()->
+    List_hit_intensity = lists:map(
+        fun({X,Y})-> hit_intensity(X,Y,0,0,200,0,math:pi()/2)  end,
+        lists:map(fun(X)->{X*?cell_size / 4,X*?cell_size / 4} end,lists:seq(0,80,1))),
+    io:format("the hit intensity list:~n~p~n",[List_hit_intensity]).
 
 %% ====================TEST PART==================
 
@@ -556,6 +576,8 @@ test() ->
 %%    radian_test(),
 %%    point_in_sector_test(),
 %%    rect_sector_intersect_test(),
+%%    hit_intensity_point_test(),
+    hit_intensity_test(),
 
     ok.
 
