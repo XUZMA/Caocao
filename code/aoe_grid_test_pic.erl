@@ -27,6 +27,12 @@ draw_axes(Dc) ->
 draw_circle(Dc) ->
     wxDC:drawCircle(Dc,{?center_x,?center_y},?radius).
 
+draw_arc(Dc) ->
+    wxDC:drawArc(Dc, 
+        {?center_x+erlang:trunc(?radius*math:cos(math:pi()/3)),?center_y+erlang:trunc(?radius*math:sin(math:pi()/3))},
+        {?center_x+erlang:trunc(?radius*math:cos(math:pi()/6)),?center_y+erlang:trunc(?radius*math:sin(math:pi()/6))},
+        {?center_x,?center_y}).
+
 draw_lines(Dc) ->
     wxDC:drawLine(
         Dc,
@@ -57,6 +63,9 @@ canvas_mini() ->
     Pen = wxPen:new(),
     wxPen:setColour(Pen, 255,0,0),
     wxDC:setPen(Dc, Pen),
+    Brush = wxBrush:new(),
+    wxBrush:setStyle(Brush,?wxTRANSPARENT),
+    wxDC:setBrush(Dc,Brush),
 
 %%    ---- draw axes and circle
     draw_circle(Dc),
@@ -65,11 +74,17 @@ canvas_mini() ->
 %%    ---- draw squares
     wxPen:setColour(Pen, 0,0,255),
     wxDC:setPen(Dc, Pen),
-    Tuplelist_LB = [{0,0,0},{1,0,1},{2,1,3},{3,1,5},{4,2,6},{5,2,8},{6,3,8},{7,4,7},{8,4,6}],
+    Tuplelist_LB = [{0,0,1},{1,0,3},{2,1,5},{3,1,6},{4,2,8},{5,2,8},{6,3,8},{7,4,7},{8,4,6}],
+%% [{0,0,1},{1,0,3},{2,1,5},{3,1,6},{4,2,8},{5,2,10},{6,3,8},{7,4,7},{8,4,6}],
+%% [{0,0,0},{1,0,1},{2,1,3},{3,1,5},{4,2,6},{5,2,8},{6,3,8},{7,4,7},{8,4,6}],
+
     draw_squares(Dc,Tuplelist_LB),
 
-%%    ---- draw border lines of the arc
+%%    ---- draw the border of the sector
+    wxPen:setColour(Pen, 255,0,0),
+    wxDC:setPen(Dc, Pen),
     draw_lines(Dc),
+    draw_arc(Dc),
 
 %%    wxFrame:destroy(Frm).
 

@@ -41,20 +41,21 @@ aoe_grids_quadrant1(Angle_s,Angle_e,Radius)->
         fun(Z) -> erlang:trunc(Z/?cell_side) end,
         [X_s, X_e]),
 
-    %% from 0 to Ox_e to Ox_s
+    %% from 0 to Ox_e -1
     lists:map(
         fun(Ox)-> {Ox,
             y_point_on_line(Ox,Angle_s,Radius),
-            y_point_on_line(Ox,Angle_e,Radius)}
+            y_point_on_line(Ox+1,Angle_e,Radius)}
         end,
-        lists:seq(0,Ox_e,1))
+        lists:seq(0,Ox_e-1,1))
     ++
+    %% from Ox_e to Ox_s
     lists:map(
         fun(Ox)-> {Ox,
             y_point_on_line(Ox,Angle_s,Radius),
             y_point_on_arc(Ox,Radius)}
         end,
-        lists:seq(Ox_e+1,Ox_s,1)).
+        lists:seq(Ox_e,Ox_s,1)).
 
 aoe_grids_quadrant1_test()->
     Angle_s = math:pi()/6,
