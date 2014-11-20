@@ -116,11 +116,30 @@ yn_point_on_ray(Ox, Angle_n,Radius) ->
 %%    Q = angle_quadrant(Angle_n);
 %% Ox_n is the X cell ordinal real for Angle_n, i.e.,
 %%    Ox_n = Radius * math:cos(Angle_n)/?cell_side.
-points_on_ray(Q, Ox_n, Angle_n,Radius)->
+%%
+%% points_on_ray_at_step_leftside/5 is used to calculate the argument, point_list_lower, for zip_pointlist/2
+points_on_ray_at_step_leftside(Q, Ox_n, Angle_n,Radius)->
     case Q of
         0 ->
             Ox0 = erlang:trunc(Ox_n),
             lists:map(fun(Ox) -> {Ox,yp_point_on_ray(Ox, Angle_n,Radius)} end,lists:seq(0,Ox0,1));
+        1 ->
+            Ox1 = floor_neg(Ox_n),
+            lists:map(fun(Ox) -> {Ox,yp_point_on_ray(Ox, Angle_n,Radius)} end,lists:seq(Ox1,-1,1));
+        2 ->
+            Ox2 = floor_neg(Ox_n),
+            lists:map(fun(Ox) -> {Ox,yn_point_on_ray(Ox, Angle_n,Radius)} end,lists:seq(Ox2,-1,1));
+        3 ->
+            Ox3 = erlang:trunc(Ox_n),
+            lists:map(fun(Ox) -> {Ox,yn_point_on_ray(Ox, Angle_n,Radius)} end,lists:seq(0,Ox3,1))
+    end.
+
+%% points_on_ray_at_step_rightside/5 is used to calculate the argument, Point_list_upper for zip_pointlist/2
+points_on_ray_at_step_rightside(Q, Ox_n, Angle_n,Radius)->
+    case Q of
+        0 ->
+            Ox0 = erlang:trunc(Ox_n),
+            lists:map(fun(Ox) -> {Ox,yp_point_on_ray(Ox, Angle_n,Radius)} end,lists:seq(1,Ox0,1));// gohere -- todo - xzm-11.20
         1 ->
             Ox1 = floor_neg(Ox_n),
             lists:map(fun(Ox) -> {Ox,yp_point_on_ray(Ox, Angle_n,Radius)} end,lists:seq(Ox1,-1,1));
@@ -169,6 +188,10 @@ points_on_arc(Q, Ox_n_s, Ox_n_e, Radius)->
 
 %% converge the cell reprentative points in the arc in a quadrant
 zip_pointlist(Point_list_lower, Point_list_upper) ->
+
+    io:format("test - Point_list_lower = ~p~n",[Point_list_lower]),
+    io:format("test - Point_list_upper = ~p~n",[Point_list_upper]),
+
     lists:append(lists:zipwith(fun({Ox,Y_l},{Ox,Y_u})->lists:map(fun(Y)->{Ox,Y} end,lists:seq(Y_l,Y_u,1))end, Point_list_lower, Point_list_upper)).
 
 %% Q = 0,1,2,3 is the quadrant ordinal of Angle_n_s.
@@ -181,6 +204,10 @@ points_in_region_quadrant(Q, Ox_n_s, Ox_n_e, Angle_n_s, Angle_n_e, Radius)->
     Point_list_ray_s = points_on_ray(Q, Ox_n_s, Angle_n_s,Radius),
     Point_list_ray_e = points_on_ray(Q, Ox_n_e, Angle_n_e,Radius),
     Point_list_arc = points_on_arc(Q, Ox_n_s, Ox_n_e, Radius),
+
+    io:format("test - Point_list_ray_s = ~p~n",[Point_list_ray_s]),
+    io:format("test - Point_list_ray_e = ~p~n",[Point_list_ray_e]),
+    io:format("test - Point_list_arc = ~p~n",[Point_list_arc]),
 
     case Q of
         0 ->
@@ -216,27 +243,18 @@ cell_LBs_sector(Angle_s, Angle_amplitude, Radius)->
 
 cell_LBs_sector_test()->
     Radius = 400,
+    AA = math:pi()/6,   %% AA, Angle_amplitude
 
-    As1 = math:pi()/3,    %% As, Angle_s
-    AA1 = math:pi()/6,   %% AA, Angle_amplitude
-    TL1 = cell_LBs_sector(Angle_s, Angle_amplitude, Radius), %% TL, Tuple List of points
-    io:format("TL = ~p~n",[TL1]),
+    As1 = 0,
+    TL1 = cell_LBs_sector(As1, AA, Radius), %% TL, Tuple List of points
+    io:format("TL1 = ~p~n",[TL1]),
 
-%%    Angle_amplitude = math:pi()/3,
-%%    Angle_amplitude = 2*math:pi(),
+%%    As2 = math:pi()/3,    %% As, Angle_s
+%%    TL2 = cell_LBs_sector(As1, AA, Radius),
+%%    io:format("TL2 = ~p~n",[TL2]),
+
 	ok.
 
-%% the output of the above test:
-%% Tuplelist_LB_Quadrant1 = [{0,0,1},{1,0,3},{2,1,5},{3,1,6},{4,2,8},{5,2,8},{6,3,8},{7,4,7},{8,4,6}]
-%% Tuplelist_LB_Quadrant2 = [{-1,0,1},{-2,0,3},{-3,1,5},{-4,1,6},{-5,2,9},{-6,2,8},{-7,3,8},{-8,4,7},{-9,4,6}]
-%% Tuplelist_LB_Quadrant3 = [{-1,-2,-1},{-2,-4,-1},{-3,-6,-2},{-4,-7,-2},{-5,-9,-3},{-6,-9,-3},{-7,-9,-4},{-8,-8,-5},{-9,-7,-5}]
-%% Tuplelist_LB_Quadrant4 = [{0,-2,-1},{1,-4,-1},{2,-6,-2},{3,-7,-2},{4,-10,-3},{5,-9,-3},{6,-9,-4},{7,-8,-5},{8,-7,-5}]
-%%
-%% the discrepency is caused by the float precision:
-%% 1/2-1/6 = 0.333333333333333370341000000000000000000000000000
-%%        1/3 = 0.333333333333333314830000000000000000000000000000
-%% pi/2-pi/6 = 1.047197551196597853360000000000000000000000000000
-%%        pi/3 = 1.047197551196597631320000000000000000000000000000
 
 %% ====================TEST PART==================
 
