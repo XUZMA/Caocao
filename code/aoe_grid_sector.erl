@@ -100,7 +100,6 @@ sector_quadrant({Q_s,Angle_n_s,Angle_e,Radius})->
             end
     end.
 
-
 grid_point({P_x,P_y})->
     [G_x, G_y] = 
         lists:map(
@@ -109,9 +108,9 @@ grid_point({P_x,P_y})->
                 T = erlang:trunc(O),
                 Q =
                     if
-                    O < T -> T - 1;
-		    true -> T
-                    end
+                        O < T -> T - 1;
+                        true -> T
+                    end,
                 Q * ?cell_side_size
             end,
         [P_x, P_y]),
@@ -240,7 +239,7 @@ stepboxes_around_ray(Q, Tx_n, Dx_n, X_n, Angle_n, Radius)->
 %% Tx_s, Tx_e are the Truncs of Dx_s, Dx_e, i.e.,
 %%    Tx_s = erlang:trunc(Dx_s),
 %%    Tx_e = erlang:trunc(Dx_e);
-stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, X_s, X_e, Angle_n_s, Angle_n_e, Radius)->
+stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, Angle_n_s, Angle_n_e, Radius)->
     if
         Tx_s == Tx_e ->
             case Q of
@@ -294,7 +293,7 @@ stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, X_s, X_e, Angle_n_s, Angle_n_e,
                             if
                                 Tx_e == Dx_e -> {[],Tx_e};
         		        true -> {[{Tx_e, yn_steppoint_on_arc(Tx_e, Radius), yn_endpoint(Angle_n_e,Radius)}],Tx_e}
-                            end,
+                            end
                 end,
 
                 Ret_M =
@@ -306,13 +305,12 @@ stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, X_s, X_e, Angle_n_s, Angle_n_e,
                             Lst = lists:map(fun(Ox)->yp_steppoint_on_arc(Ox, Radius) end,lists:seq(Left_end,Right_end,1)),
                             Lst1 = lists:sublist(Lst,1,Span),
                             Lst2 = lists:sublist(Lst,2,Span),
-                            Ret_M = 
-                                case Q of
-                                    0 -> lists:zip(Lst0,Lst2,Lst1);
-				    1 -> lists:zip(Lst0,Lst1,Lst2);
-				    2 -> lists:zip(Lst0,Lst2,Lst1);
-				    3 -> lists:zip(Lst0,Lst1,Lst2)
-                                end
+                            case Q of
+                                0 -> lists:zip3(Lst0,Lst2,Lst1);
+				1 -> lists:zip3(Lst0,Lst1,Lst2);
+				2 -> lists:zip3(Lst0,Lst2,Lst1);
+				3 -> lists:zip3(Lst0,Lst1,Lst2)
+                            end
                     end,
 
                 Ret_L ++ Ret_M ++ Ret_R
@@ -372,24 +370,24 @@ aoe_grid_sector(Angle_s, Angle_amplitude, Radius)->
 
     lists:map(
         fun({O_x,O_y}) -> {O_x * ?cell_side_size, O_y * ?cell_side_size} end,
-        (lists:append(
+        lists:append(
             lists:map(
                 fun({Q,A_n_s,A_n_e,Radius_}) ->
-                    X_s = Radius * math:cos(A_n_s),
+                    X_s = Radius_ * math:cos(A_n_s),
                     Dx_s = X_s/?cell_side_size,
                     Tx_s = erlang:trunc(Dx_s),
-                    X_e = Radius * math:cos(A_n_e),
+                    X_e = Radius_ * math:cos(A_n_e),
                     Dx_e = X_e/?cell_side_size,
                     Tx_e = erlang:trunc(Dx_e),
-                    Stepboxes_ray_s = stepboxes_around_ray(Q, Tx_s, Dx_s, X_s, A_n_s, Radius),
-                    Stepboxes_ray_e = stepboxes_around_ray(Q, Tx_e, Dx_e, X_e, A_n_e,Radius),
-                    Stepboxes_arc = stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, X_s, X_e, A_n_s, A_n_e, Radius),
+                    TL_stepboxes_ray_s = stepboxes_around_ray(Q, Tx_s, Dx_s, X_s, A_n_s, Radius_),
+                    TL_stepboxes_ray_e = stepboxes_around_ray(Q, Tx_e, Dx_e, X_e, A_n_e,Radius_),
+		    TL_stepboxes_arc = stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, A_n_s, A_n_e, Radius_),
                     {Stepboxes_curve_L,Stepboxes_curve_U} =
                         case Q of
-                            0 -> {Stepboxes_ray_s,umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_e,TL_stepboxes_arc)};
-                            1 -> {Stepboxes_ray_e,umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_s,TL_stepboxes_arc)};
-                            2 -> {umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_e,TL_stepboxes_arc),Stepboxes_ray_s};
-                            3 -> {umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_s,TL_stepboxes_arc),Stepboxes_ray_e}
+                            0 -> {TL_stepboxes_ray_s,umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_e,TL_stepboxes_arc)};
+                            1 -> {TL_stepboxes_ray_e,umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_s,TL_stepboxes_arc)};
+                            2 -> {umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_e,TL_stepboxes_arc),TL_stepboxes_ray_s};
+                            3 -> {umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_s,TL_stepboxes_arc),TL_stepboxes_ray_e}
                         end,
                     zip_stepboxes({Stepboxes_curve_L,Stepboxes_curve_U})
                 end,
@@ -409,37 +407,61 @@ point_in_sector_aoe(P_x, P_y, Center_x, Center_y, Aoe_grid)->
 
 %% ====================TEST PART==================
 
-stepboxes_around_ray_test()->
-    io:format("test - ~n"),
-    ok.
-
-stepboxes_around_arc_test()->
-    io:format("test - ~n"),
-    ok.
-
-umerge_stepboxes_around_arc_ray_test()->
-    io:format("test - ~n"),
-    ok.
-
-aoe_grid_sector_test()->
-    io:format("test - ~n"),
-    ok.
-
 test() ->
 
     Radius = 400,
-    AA = math:pi()/6,   %% AA, Angle_amplitude
-    As1 = 0,
-    TL1 = aoe_grid_sector(As1, AA, Radius), %% TL, Tuple List of points
-    io:format("TL1 = ~p~n",[TL1]),
-    %% As2 = math:pi()/3,    %% As, Angle_s
-    %% TL2 = aoe_grid_sector(As1, AA, Radius),
+   %% AA, Angle_amplitude
+    AA = math:pi()/6,
+
+    %% As, Angle_s
+    %% As1 = 0,
+    %% TL, Tuple List of points
+    %% TL1 = aoe_grid_sector(As1, AA, Radius), 
+    %% io:format("TL1 = ~p~n",[TL1]),
+
+    %% As2 = math:pi()/6,
+    %% TL2 = aoe_grid_sector(As2, AA, Radius),
     %% io:format("TL2 = ~p~n",[TL2]),
 
-    stepboxes_around_ray_test(),
-    stepboxes_around_arc(),
-    umerge_stepboxes_around_arc_ray_test(),
-    aoe_grid_sector_test(),
+    As3 = math:pi()/3,
+    TL3 = aoe_grid_sector(As3, AA, Radius),
+    io:format("TL3 = ~p~n",[TL3]),
+
+    %% As4 = math:pi()/2,
+    %% TL4 = aoe_grid_sector(As4, AA, Radius),
+    %% io:format("TL4 = ~p~n",[TL4]),
+
+    %% As5 = 2*math:pi()/3,
+    %% TL5 = aoe_grid_sector(As5, AA, Radius),
+    %% io:format("TL5 = ~p~n",[TL5]),
+
+    %% As6 = 5*math:pi()/6,
+    %% TL6 = aoe_grid_sector(As6, AA, Radius),
+    %% io:format("TL6 = ~p~n",[TL6]),
+
+    %% As7 = math:pi(),
+    %% TL7 = aoe_grid_sector(As7, AA, Radius),
+    %% io:format("TL7 = ~p~n",[TL7]),
+
+    %% As8 = 7*math:pi()/6,
+    %% TL8 = aoe_grid_sector(As8, AA, Radius),
+    %% io:format("TL8 = ~p~n",[TL8]),
+
+    %% As9 = 4*math:pi()/3,
+    %% TL9 = aoe_grid_sector(As9, AA, Radius),
+    %% io:format("TL9 = ~p~n",[TL9]),
+
+    %% AsA = 3*math:pi()/2,
+    %% TLA = aoe_grid_sector(AsA, AA, Radius),
+    %% io:format("TLA = ~p~n",[TLA]),
+
+    %% AsB = 5*math:pi()/3,
+    %% TLB = aoe_grid_sector(AsB, AA, Radius),
+    %% io:format("TLB = ~p~n",[TLB]),
+
+    %% AsC = 11*math:pi()/6,
+    %% TLC = aoe_grid_sector(AsC, AA, Radius),
+    %% io:format("TLC = ~p~n",[TLC]),
 
     ok.
 %% ================================================
