@@ -10,7 +10,8 @@
 %% process these problems for each quadrant.
 
 -module(aoe_grid_sector).
--export([start/0]).
+-export([start/0,grid_point/2,aoe_grid_sector/3,point_in_sector_aoe/5, point_in_sector_aoe/7]).
+
 
 %%    ================ predefined macros ================
 %% ?cell_side_size is the length of cell side, in pixel.
@@ -29,13 +30,6 @@ floor_neg(Neg)->
     if
         Neg < Trunc -> Trunc -1;
 	true -> Trunc
-    end.
-
-is_integer(X) ->
-    T = erlang:trunc(X),
-    if
-        T == X -> true;
-	true -> false
     end.
 
 %% the normalized angle should fall into the interval [0, 2*math:pi()).
@@ -120,12 +114,6 @@ grid_point(P_x,P_y)->
     grid_point({P_x,P_y}).
 
 %%    ================ cell (representative) points around rays and arcs ================
-yp_zenith(Radius) ->
-    erlang:trunc(Radius / ?cell_side_size) .
-
-yn_zenith(Radius) ->
-    floor_neg(-Radius / ?cell_side_size) .
-
 yp_endpoint(Angle_n,Radius) ->
     erlang:trunc(Radius * math:sin(Angle_n) / ?cell_side_size) .
 
@@ -163,7 +151,7 @@ stepboxes_around_ray(Q, Tx_n, Dx_n, Angle_n, Radius)->
                 0 -> [{0,0,yp_endpoint(Angle_n,Radius) }];
 		1 -> [{-1,0,yp_endpoint(Angle_n,Radius) }];
 		2 -> [{-1,yn_endpoint(Angle_n,Radius) ,-1}];
-		3 -> {0,yn_endpoint(Angle_n,Radius),-1}		    
+		3 -> [{0,yn_endpoint(Angle_n,Radius),-1}]
             end;
         Tx_n == Dx_n ->
             case Q of
@@ -173,12 +161,12 @@ stepboxes_around_ray(Q, Tx_n, Dx_n, Angle_n, Radius)->
                     L2 = lists:sublist(L0,2,Tx_n),
                     lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,L1,L2);
 		1 -> 
-                    L0 = lists:map(fun(Ox) -> {Ox,yp_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-1,1))++[{-1,0}],
+                    L0 = lists:map(fun(Ox) -> {Ox,yp_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-1,1))++[{0,0}],
                     L1 = lists:sublist(L0,1,-Tx_n),
                     L2 = lists:sublist(L0,2,-Tx_n),
-                    lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,L2,L1);
+                    lists:zipwith(fun({_,Yp1},{Ox,Yp2})->{Ox,Yp1,Yp2}end,L2,L1);
 		2 -> 
-                    L0 = lists:map(fun(Ox) -> {Ox,yn_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-1,1))++[{-1,-1}],
+                    L0 = lists:map(fun(Ox) -> {Ox,yn_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-1,1))++[{0,-1}],
                     L1 = lists:sublist(L0,1,-Tx_n),
                     L2 = lists:sublist(L0,2,-Tx_n),
                     lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,L1,L2);
@@ -186,7 +174,7 @@ stepboxes_around_ray(Q, Tx_n, Dx_n, Angle_n, Radius)->
                     L0 = [{0,-1}]++lists:map(fun(Ox) -> {Ox,yn_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(1,Tx_n,1)),
                     L1 = lists:sublist(L0,1,Tx_n),
                     L2 = lists:sublist(L0,2,Tx_n),
-                    lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,L2,L1)
+                    lists:zipwith(fun({_,Yp1},{Ox,Yp2})->{Ox,Yp1,Yp2}end,L2,L1)
             end;
         true ->
             case Q of
@@ -195,21 +183,17 @@ stepboxes_around_ray(Q, Tx_n, Dx_n, Angle_n, Radius)->
                     Lst2 = lists:sublist(Lst1,2,Tx_n) ++[{Tx_n, yp_endpoint(Angle_n,Radius)}],
                     lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,Lst1,Lst2);
 		1 -> 
-                    Lst1 = lists:map(fun(Ox) -> {Ox,yp_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-2,1))++[{-1,0}],
-                    Lst2 = [{Tx_n-1, yp_endpoint(Angle_n,Radius)}]++lists:sublist(Lst1,1,-Tx_n-1),
-
-io:format("-test - Lst1=~p~n",[Lst1]),
-io:format("-test - Lst2=~p~n",[Lst2]),
-
-                    lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,Lst1,Lst2);
+                    Lst1 = lists:map(fun(Ox) -> {Ox,yp_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-1,1))++[{0,0}],
+                    Lst2 = [{Tx_n-1, yp_endpoint(Angle_n,Radius)}]++lists:sublist(Lst1,1,-Tx_n),
+                    lists:zipwith(fun({_,Yp1},{Ox,Yp2})->{Ox,Yp1,Yp2}end,Lst1,Lst2);
 		2 -> 
-                    Lst1 = lists:map(fun(Ox) -> {Ox,yn_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-2,1))++[{-1,-1}],
-                    Lst2 = [{Tx_n-1, yn_endpoint(Angle_n,Radius)}]++lists:sublist(Lst1,1,-Tx_n-1),
+                    Lst1 = lists:map(fun(Ox) -> {Ox,yn_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(Tx_n,-1,1))++[{0,-1}],
+                    Lst2 = [{Tx_n-1, yn_endpoint(Angle_n,Radius)}]++lists:sublist(Lst1,1,-Tx_n),
                     lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,Lst2,Lst1);
 		3 -> 
                     Lst1 = [{0,-1}]++lists:map(fun(Ox) -> {Ox,yn_steppoint_on_ray(Ox, Angle_n)} end,lists:seq(1,Tx_n,1)),
                     Lst2 = lists:sublist(Lst1,2,Tx_n)++[{Tx_n, yn_endpoint(Angle_n,Radius)}],
-                    lists:zipwith(fun({Ox,Yp1},{_,Yp2})->{Ox,Yp1,Yp2}end,Lst2,Lst1)
+                    lists:zipwith(fun({_,Yp1},{Ox,Yp2})->{Ox,Yp1,Yp2}end,Lst2,Lst1)
             end
     end.
 
@@ -272,8 +256,8 @@ stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, Angle_n_s, Angle_n_e, Radius)->
 		    3 ->
                         {Ret_L,Left_end} =
                             if
-                                Tx_s == Dx_s -> [];
-                                true ->[{Tx_s, yn_endpoint(Angle_n_s,Radius), yn_steppoint_on_arc(Tx_s+1, Radius)}]
+                                Tx_s == Dx_s -> {[],Tx_s};
+                                true ->{[{Tx_s, yn_endpoint(Angle_n_s,Radius), yn_steppoint_on_arc(Tx_s+1, Radius)}],Tx_s+1}
                             end,
                         {Ret_R, Right_end} =
                             if
@@ -368,20 +352,12 @@ aoe_grid_sector(Angle_s, Angle_amplitude, Radius)->
                     TL_stepboxes_ray_s = stepboxes_around_ray(Q, Tx_s, Dx_s,  A_n_s, Radius_),
                     TL_stepboxes_ray_e = stepboxes_around_ray(Q, Tx_e, Dx_e, A_n_e,Radius_),
 		    TL_stepboxes_arc = stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, A_n_s, A_n_e, Radius_),
-
-io:format("TL_stepboxes_ray_s = ~p~n",[TL_stepboxes_ray_s]),
-io:format("TL_stepboxes_ray_e = ~p~n",[TL_stepboxes_ray_e]),
-io:format("TL_stepboxes_arc = ~p~n",[TL_stepboxes_arc]),
-%% TL_stepboxes_ray_s = [{-1,0,10}]
-%% TL_stepboxes_ray_e = [{-4,6,8},{-3,5,6},{-2,3,5},{-1,0,3}]
-%% TL_stepboxes_arc = [{-5,8,9},{-4,9,9},{-3,9,9},{-2,9,9},{-1,9,10}]
-
                     {Stepboxes_curve_L,Stepboxes_curve_U} =
                         case Q of
                             0 -> {TL_stepboxes_ray_s,umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_e,TL_stepboxes_arc)};
-                            1 -> {TL_stepboxes_ray_e,umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_s,TL_stepboxes_arc)};
-                            2 -> {umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_e,TL_stepboxes_arc),TL_stepboxes_ray_s};
-                            3 -> {umerge_stepboxes_around_arc_ray(0, TL_stepboxes_ray_s,TL_stepboxes_arc),TL_stepboxes_ray_e}
+                            1 -> {TL_stepboxes_ray_e,umerge_stepboxes_around_arc_ray(1, TL_stepboxes_ray_s,TL_stepboxes_arc)};
+                            2 -> {umerge_stepboxes_around_arc_ray(2, TL_stepboxes_ray_e,TL_stepboxes_arc),TL_stepboxes_ray_s};
+                            3 -> {umerge_stepboxes_around_arc_ray(3, TL_stepboxes_ray_s,TL_stepboxes_arc),TL_stepboxes_ray_e}
                         end,
                     zip_stepboxes({Stepboxes_curve_L,Stepboxes_curve_U})
                 end,
@@ -411,53 +387,53 @@ test() ->
 
     AA = math:pi()/6,
 
-    %% As1 = 0,
-    %% TL1 = aoe_grid_sector(As1, AA, Radius), 
-    %% io:format("TL1 = ~p~n",[TL1]),
+    As1 = 0,
+    TL1 = aoe_grid_sector(As1, AA, Radius), 
+    io:format("TL1 = ~p,~n",[TL1]),
 
-    %% As2 = math:pi()/6,
-    %% TL2 = aoe_grid_sector(As2, AA, Radius),
-    %% io:format("TL2 = ~p~n",[TL2]),
+    As2 = math:pi()/6,
+    TL2 = aoe_grid_sector(As2, AA, Radius),
+    io:format("TL2 = ~p,~n",[TL2]),
 
-    %% As3 = math:pi()/3,
-    %% TL3 = aoe_grid_sector(As3, AA, Radius),
-    %% io:format("TL3 = ~p~n",[TL3]),
+    As3 = math:pi()/3,
+    TL3 = aoe_grid_sector(As3, AA, Radius),
+    io:format("TL3 = ~p,~n",[TL3]),
 
     As4 = math:pi()/2,
     TL4 = aoe_grid_sector(As4, AA, Radius),
-    io:format("TL4 = ~p~n",[TL4]),
+    io:format("TL4 = ~p,~n",[TL4]),
 
-    %% As5 = 2*math:pi()/3,
-    %% TL5 = aoe_grid_sector(As5, AA, Radius),
-    %% io:format("TL5 = ~p~n",[TL5]),
+    As5 = 2*math:pi()/3,
+    TL5 = aoe_grid_sector(As5, AA, Radius),
+    io:format("TL5 = ~p,~n",[TL5]),
 
-    %% As6 = 5*math:pi()/6,
-    %% TL6 = aoe_grid_sector(As6, AA, Radius),
-    %% io:format("TL6 = ~p~n",[TL6]),
+    As6 = 5*math:pi()/6,
+    TL6 = aoe_grid_sector(As6, AA, Radius),
+    io:format("TL6 = ~p,~n",[TL6]),
 
-    %% As7 = math:pi(),
-    %% TL7 = aoe_grid_sector(As7, AA, Radius),
-    %% io:format("TL7 = ~p~n",[TL7]),
+    As7 = math:pi(),
+    TL7 = aoe_grid_sector(As7, AA, Radius),
+    io:format("TL7 = ~p,~n",[TL7]),
 
-    %% As8 = 7*math:pi()/6,
-    %% TL8 = aoe_grid_sector(As8, AA, Radius),
-    %% io:format("TL8 = ~p~n",[TL8]),
+    As8 = 7*math:pi()/6,
+    TL8 = aoe_grid_sector(As8, AA, Radius),
+    io:format("TL8 = ~p,~n",[TL8]),
 
-    %% As9 = 4*math:pi()/3,
-    %% TL9 = aoe_grid_sector(As9, AA, Radius),
-    %% io:format("TL9 = ~p~n",[TL9]),
+    As9 = 4*math:pi()/3,
+    TL9 = aoe_grid_sector(As9, AA, Radius),
+    io:format("TL9 = ~p,~n",[TL9]),
 
-    %% AsA = 3*math:pi()/2,
-    %% TLA = aoe_grid_sector(AsA, AA, Radius),
-    %% io:format("TLA = ~p~n",[TLA]),
+    AsA = 3*math:pi()/2,
+    TLA = aoe_grid_sector(AsA, AA, Radius),
+    io:format("TLA = ~p,~n",[TLA]),
 
-    %% AsB = 5*math:pi()/3,
-    %% TLB = aoe_grid_sector(AsB, AA, Radius),
-    %% io:format("TLB = ~p~n",[TLB]),
+    AsB = 5*math:pi()/3,
+    TLB = aoe_grid_sector(AsB, AA, Radius),
+    io:format("TLB = ~p,~n",[TLB]),
 
-    %% AsC = 11*math:pi()/6,
-    %% TLC = aoe_grid_sector(AsC, AA, Radius),
-    %% io:format("TLC = ~p~n",[TLC]),
+    AsC = 11*math:pi()/6,
+    TLC = aoe_grid_sector(AsC, AA, Radius),
+    io:format("TLC = ~p,~n",[TLC]),
 
     ok.
 %% ================================================
