@@ -11,7 +11,11 @@
 %%    ================================================
 
 %% in Eshell, run code:lib_dir(wx) to get wx lib dir: "/usr/local/lib/erlang/lib/wx-1.3.1"
--include("/usr/local/lib/erlang/lib/wx-1.3.1/include/wx.hrl").
+%% -include("/usr/local/lib/erlang/lib/wx-1.3.1/include/wx.hrl").
+
+%% /usr/lib/erlang/lib/wx-1.1.1/examples/demo
+-include("/usr/lib/erlang/lib/wx-1.1.1/include/wx.hrl").
+%%-include_lib("wx/include/wx.hrl").
 
 -define(cell_unit, 40).
 -define(square_side, ?cell_unit).
@@ -173,10 +177,8 @@ TL2 = [{0,0},
             2 ->
                 TL2;
 	 _ -> []
-        end.
-    lists:map(fun({P_x,P_y}) -> wxDC:drawRectangle(Dc, {?center_x+P_x,?center_y+P_y}, {?square_side,?square_side}) end,TL);
-
-
+        end,
+    lists:map(fun({P_x,P_y}) -> wxDC:drawRectangle(Dc, {?center_x+P_x,?center_y+P_y}, {?square_side,?square_side}) end,TL).
 
 canvas_mini() ->
 
