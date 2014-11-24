@@ -272,7 +272,13 @@ stepboxes_around_arc(Q,  Tx_s, Tx_e, Dx_s, Dx_e, Angle_n_s, Angle_n_e, Radius)->
 			true ->
                             Span = Right_end - Left_end,
                             Lst0 = lists:seq(Left_end,Right_end-1,1),
-                            Lst = lists:map(fun(Ox)->yp_steppoint_on_arc(Ox, Radius) end,lists:seq(Left_end,Right_end,1)),
+                            Lst = 
+                                case Q of 
+                                    0 -> lists:map(fun(Ox)->yp_steppoint_on_arc(Ox, Radius) end,lists:seq(Left_end,Right_end,1));
+                                    1 -> lists:map(fun(Ox)->yp_steppoint_on_arc(Ox, Radius) end,lists:seq(Left_end,Right_end,1));
+                                    2 -> lists:map(fun(Ox)->yn_steppoint_on_arc(Ox, Radius) end,lists:seq(Left_end,Right_end,1));
+                                    3 -> lists:map(fun(Ox)->yn_steppoint_on_arc(Ox, Radius) end,lists:seq(Left_end,Right_end,1))
+                                end,
                             Lst1 = lists:sublist(Lst,1,Span),
                             Lst2 = lists:sublist(Lst,2,Span),
                             case Q of
@@ -385,55 +391,73 @@ test() ->
     %% As, Angle_s
     %% TL, Tuple List of points
 
-    AA = math:pi()/6,
+    %% AA = math:pi()/6,
 
-    As1 = 0,
-    TL1 = aoe_grid_sector(As1, AA, Radius), 
-    io:format("TL1 = ~p,~n",[TL1]),
+    %% As1 = 0,
+    %% TL1 = aoe_grid_sector(As1, AA, Radius), 
+    %% io:format("TL1 = ~p,~n",[TL1]),
 
-    As2 = math:pi()/6,
-    TL2 = aoe_grid_sector(As2, AA, Radius),
-    io:format("TL2 = ~p,~n",[TL2]),
+    %% As2 = math:pi()/6,
+    %% TL2 = aoe_grid_sector(As2, AA, Radius),
+    %% io:format("TL2 = ~p,~n",[TL2]),
 
-    As3 = math:pi()/3,
-    TL3 = aoe_grid_sector(As3, AA, Radius),
-    io:format("TL3 = ~p,~n",[TL3]),
+    %% As3 = math:pi()/3,
+    %% TL3 = aoe_grid_sector(As3, AA, Radius),
+    %% io:format("TL3 = ~p,~n",[TL3]),
 
-    As4 = math:pi()/2,
-    TL4 = aoe_grid_sector(As4, AA, Radius),
-    io:format("TL4 = ~p,~n",[TL4]),
+    %% As4 = math:pi()/2,
+    %% TL4 = aoe_grid_sector(As4, AA, Radius),
+    %% io:format("TL4 = ~p,~n",[TL4]),
 
-    As5 = 2*math:pi()/3,
-    TL5 = aoe_grid_sector(As5, AA, Radius),
-    io:format("TL5 = ~p,~n",[TL5]),
+    %% As5 = 2*math:pi()/3,
+    %% TL5 = aoe_grid_sector(As5, AA, Radius),
+    %% io:format("TL5 = ~p,~n",[TL5]),
 
-    As6 = 5*math:pi()/6,
-    TL6 = aoe_grid_sector(As6, AA, Radius),
-    io:format("TL6 = ~p,~n",[TL6]),
+    %% As6 = 5*math:pi()/6,
+    %% TL6 = aoe_grid_sector(As6, AA, Radius),
+    %% io:format("TL6 = ~p,~n",[TL6]),
 
-    As7 = math:pi(),
-    TL7 = aoe_grid_sector(As7, AA, Radius),
-    io:format("TL7 = ~p,~n",[TL7]),
+    %% As7 = math:pi(),
+    %% TL7 = aoe_grid_sector(As7, AA, Radius),
+    %% io:format("TL7 = ~p,~n",[TL7]),
 
-    As8 = 7*math:pi()/6,
-    TL8 = aoe_grid_sector(As8, AA, Radius),
-    io:format("TL8 = ~p,~n",[TL8]),
+    %% As8 = 7*math:pi()/6,
+    %% TL8 = aoe_grid_sector(As8, AA, Radius),
+    %% io:format("TL8 = ~p,~n",[TL8]),
 
-    As9 = 4*math:pi()/3,
-    TL9 = aoe_grid_sector(As9, AA, Radius),
-    io:format("TL9 = ~p,~n",[TL9]),
+    %% As9 = 4*math:pi()/3,
+    %% TL9 = aoe_grid_sector(As9, AA, Radius),
+    %% io:format("TL9 = ~p,~n",[TL9]),
 
-    AsA = 3*math:pi()/2,
-    TLA = aoe_grid_sector(AsA, AA, Radius),
-    io:format("TLA = ~p,~n",[TLA]),
+    %% AsA = 3*math:pi()/2,
+    %% TLA = aoe_grid_sector(AsA, AA, Radius),
+    %% io:format("TLA = ~p,~n",[TLA]),
 
-    AsB = 5*math:pi()/3,
-    TLB = aoe_grid_sector(AsB, AA, Radius),
-    io:format("TLB = ~p,~n",[TLB]),
+    %% AsB = 5*math:pi()/3,
+    %% TLB = aoe_grid_sector(AsB, AA, Radius),
+    %% io:format("TLB = ~p,~n",[TLB]),
 
-    AsC = 11*math:pi()/6,
-    TLC = aoe_grid_sector(AsC, AA, Radius),
-    io:format("TLC = ~p,~n",[TLC]),
+    %% AsC = 11*math:pi()/6,
+    %% TLC = aoe_grid_sector(AsC, AA, Radius),
+    %% io:format("TLC = ~p,~n",[TLC]),
+
+    AA_new = math:pi()/3,
+
+    %% AsD = -math:pi()/6,
+    %% TLD = aoe_grid_sector(AsD, AA_new, Radius), 
+    %% io:format("TLD = ~p,~n",[TLD]),
+
+    %% AsE = math:pi()/3,
+    %% TLE = aoe_grid_sector(AsE, AA_new, Radius), 
+    %% io:format("TLE = ~p,~n",[TLE]),
+
+    %% AsF = 5*math:pi()/6,
+    %% TLF = aoe_grid_sector(AsF, AA_new, Radius), 
+    %% io:format("TLF = ~p,~n",[TLF]),
+
+    AsG = 4*math:pi()/3,
+    TLG = aoe_grid_sector(AsG, AA_new, Radius), 
+    io:format("TLG = ~p,~n",[TLG]),
 
     ok.
 %% ================================================
