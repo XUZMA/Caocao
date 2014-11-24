@@ -7,7 +7,7 @@
 
 %% Algorithm description:
 %% assume the attack region is a sector, and every cell is a square;
-%% let the LB(left bottom) point be the representive of the grid cell respectively,
+%% let the LB(left bottom) point be the representative of the grid cell respectively,
 %% the aoe is the set of the LBs.
 %% partition the X-axis in a series of holes according to the cell side size.
 %% for ervery hole on the x-axis, find the aoe range in the Y direction.
