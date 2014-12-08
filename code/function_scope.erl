@@ -23,6 +23,7 @@ dr_without_shadow() ->
     A = 1,
     (fun() -> A = 2 end)().
 
+%%
 %% compile this module:
 %%    $ erlc function_scope.erl
 %% Listed below are the compiling warnings:
@@ -42,3 +43,4 @@ dr_without_shadow() ->
 %%    4> function_scope:dr_without_shadow().
 %%    ** exception error: no match of right hand side value 2
 %%         in function  function_scope:'-dr_without_shadow/0-fun-0-'/0 (function_scope.erl, line 24)
+%%
