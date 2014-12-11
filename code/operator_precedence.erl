@@ -14,15 +14,17 @@
 %% orelse
 %% =!
 
-
 -module('operator_precedence').
 -export([start/0]).
 
 -define(is_nn_number(_R),
     (is_number(_R) andalso _R >= 0)).
 
+%% notice the different validation functions.
+%% the 2nd is more concise and extensible than the 1st one.
+
 %% validate a probability distribution.
-valid_distribution(Prob) ->
+valid_distribution1(Prob) ->
     if
         is_list(Prob) and (length(Prob) == 5) ->
             [P1,P2,P3,P4,P5] = Prob,
@@ -45,12 +47,25 @@ valid_distribution(Prob) ->
         true -> false
     end.
 
+valid_distribution2(Prob) ->
+    is_list(Prob) 
+    andalso (length(Prob) == 5) 
+    andalso lists:all(fun is_number/1,Prob)
+    andalso lists:all(fun(X)-> (0 =< X)andalso(X =< 100)end,Prob)
+    andalso (lists:sum(Prob)==100).
 
 start()->
 
     Probability_list = [20,20,20,20,20],
-    VD = valid_distribution(Probability_list),
-    case VD of
+    VD1 = valid_distribution1(Probability_list),
+    VD2 = valid_distribution2(Probability_list),
+    case VD1 of
+        true ->
+            io:format("valid probability list = ~p~n",[Probability_list]);
+	_ ->
+            io:format("invalid probability list = ~p~n",[Probability_list])
+    end,
+    case VD2 of
         true ->
             io:format("valid probability list = ~p~n",[Probability_list]);
 	_ ->
