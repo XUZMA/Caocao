@@ -48,7 +48,10 @@ start()->
 %%       [{a1,b4},{a2,b4},{a3,b4},{a4,b4},{a5,b4}],
 %%       [{a1,b5},{a2,b5},{a3,b5},{a4,b5},{a5,b5}]]
 
-    L4 = [[{X,Y}|| X<-L1] || Y<-L2],
+%%     L4 = [[{X,Y}| X<-L1] | Y<-L2],
+%% erlc multiple_comprehension.erl
+%% multiple_comprehension.erl:51: syntax error before: '<-'
+%% multiple_comprehension.erl:25: function start/0 undefined
 
     io:format("L1 = ~p~n",[L1]),
     io:format("L2 = ~p~n",[L2]),
