@@ -41,7 +41,7 @@ start()->
 %%       #Fun<multiple_comprehension.0.71978625>,
 %%       #Fun<multiple_comprehension.0.71978625>]
 
-%%     L4 = [[{X,Y}|| X<-L1] || Y<-L2],
+     L4 = [[{X,Y}|| X<-L1] || Y<-L2],
 %% L4 = [[{a1,b1},{a2,b1},{a3,b1},{a4,b1},{a5,b1}],
 %%       [{a1,b2},{a2,b2},{a3,b2},{a4,b2},{a5,b2}],
 %%       [{a1,b3},{a2,b3},{a3,b3},{a4,b3},{a5,b3}],
